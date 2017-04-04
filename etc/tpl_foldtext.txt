@@ -1,3 +1,6 @@
+*foldtext.txt*  Fold text with headings (markdown, viki, org, latex etc.)
+                    Author: Tom Link, micathom at gmail com
+
 This plugin provides |folding| support for filetypes that don't do so by default:
 
     - markdown, pandoc
@@ -15,7 +18,7 @@ Install~
 
 To install the vimball, edit the vba file and type: >
 
-    :so %
+    :so %%
 
 See :help vimball for details.
 
@@ -25,10 +28,4 @@ VAM, Vundle, NeoBundle, vim-plug, vim-unbundle etc. or simply git.
 Also available via git: http://github.com/tomtom/foldtext_vim
 
 
-
-
-
-License: GPLv3 or later
-Install: See http://github.com/tomtom/vimtlib/blob/master/INSTALL.TXT
-See http://github.com/tomtom for related plugins.
-
+%s
