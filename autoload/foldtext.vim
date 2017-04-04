@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     https://github.com/tomtom
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-04-03
-" @Revision:    112
+" @Last Change: 2017-04-04
+" @Revision:    122
 
 
 if !exists('g:foldtext#max_headings')
@@ -12,8 +12,8 @@ endif
 
 function! foldtext#MaybeInvalidateData() abort "{{{3
     " Always invalidate the data
-    if !exists('b:viki_fold_headings_invalidated') && exists('b:viki_fold_headings')
-        let b:viki_fold_headings_invalidated = 1
+    if !exists('b:foldtext_invalidated') && exists('b:foldtext')
+        let b:foldtext_invalidated = 1
         au Viki CursorHold,CursorHoldI <buffer> call s:InvalidateData()
     endif
 endf
@@ -21,8 +21,8 @@ endf
 
 function! s:InvalidateData() abort "{{{3
     au! Viki CursorHold,CursorHoldI <buffer> call s:InvalidateData()
-    unlet! b:viki_fold_headings_invalidated
-    unlet! b:viki_fold_headings
+    unlet! b:foldtext_invalidated
+    unlet! b:foldtext
 endf
 
 
@@ -52,13 +52,13 @@ endf
 
 
 function! foldtext#Foldexpr(lnum) abort "{{{3
-    if !exists('b:viki_fold_headings')
+    if !exists('b:foldtext')
         call s:MakeHeadingsData()
     endif
-    if !exists('b:viki_fold_headings')
+    if !exists('b:foldtext')
         return -1
     else
-        return b:viki_fold_headings.GetFoldLevel(a:lnum)
+        return b:foldtext.GetFoldLevel(a:lnum)
     endif
 endf
 
@@ -79,6 +79,8 @@ let s:leaf = {}
 function! s:leaf.GetFoldLevel(lnum) abort dict "{{{3
     if index(self.lnums, a:lnum) != -1
         return '>'. self.level
+    " elseif a:lnum < self.lnums[0]
+    "     return -1
     else
         return self.level
     endif
@@ -116,6 +118,7 @@ function! s:MakeHeadingsData() abort "{{{3
     let l:pos = getpos('.')
     try
         let l:lnum = 0
+        let l:first = 1
         while l:lnum < line('$')
             let l:lnum += 1
             exec l:lnum
@@ -125,7 +128,8 @@ function! s:MakeHeadingsData() abort "{{{3
                 break
             else
                 call add(l:lnums, l:lnum)
-                let l:headings[''. l:lnum] = s:GetLevel()
+                let l:headings[''. l:lnum] = {'level': s:GetLevel(), 'first': l:first}
+                let l:first = 0
             endif
         endwh
     finally
@@ -134,7 +138,7 @@ function! s:MakeHeadingsData() abort "{{{3
     if len(l:lnums) >= g:foldtext#max_headings
         setlocal foldexpr&
     else
-        let b:viki_fold_headings = s:Tree(l:lnums, l:headings)
+        let b:foldtext = s:Tree(l:lnums, l:headings)
     endif
 endf
 
@@ -152,10 +156,21 @@ endf
 
 
 function! s:Leaf(lnums, headings) abort "{{{3
+    let l:lnum = a:lnums[0]
+    let l:snum = ''. l:lnum
     let l:leaf = copy(s:leaf)
-    let l:leaf.lnums = a:lnums
-    let l:leaf.level = a:headings[''. a:lnums[0]]
-    return l:leaf
+    let l:leaf.lnums = sort(copy(a:lnums))
+    let l:leaf.level = a:headings[l:snum].level
+    let l:first = a:headings[l:snum].first
+    if l:first && l:lnum > 1
+        let l:node = copy(s:node)
+        let l:node.mid = l:lnum
+        let l:node.left = copy(s:empty)
+        let l:node.right = l:leaf
+        return l:node
+    else
+        return l:leaf
+    endif
 endf
 
 
