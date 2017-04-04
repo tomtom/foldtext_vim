@@ -2,7 +2,7 @@
 " @Website:     https://github.com/tomtom
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2017-04-04
-" @Revision:    122
+" @Revision:    131
 
 
 if !exists('g:foldtext#max_headings')
@@ -34,19 +34,19 @@ function! foldtext#Setup(opt) abort "{{{3
     if has_key(a:opt, 'level_expr') && getbufvar(bufnr, 'foldtext_level_expr', '') != a:opt.level_expr
         let b:foldtext_level_expr = a:opt.level_expr
     endif
-    if &l:foldexpr != 'foldtext#Foldexpr(v:lnum)'
+    if &l:foldexpr !=# 'foldtext#Foldexpr(v:lnum)'
         augroup Foldtext
             autocmd InsertLeave <buffer> call foldtext#MaybeInvalidateData()
             " autocmd TextChanged <buffer> call foldtext#MaybeInvalidateData()
         augroup END
         setlocal foldmethod=expr
         setlocal foldexpr=foldtext#Foldexpr(v:lnum)
-        " let undo_ftplugin = 'setlocal foldmethod< foldexpr< | unlet! b:foldtext_rx b:foldtext_level_expr | autocmd! Foldtext InsertLeave <buffer>'
-        " if exists('b:undo_ftplugin')
-        "     let b:undo_ftplugin .= ' | '. undo_ftplugin
-        " else
-        "     let b:undo_ftplugin = undo_ftplugin
-        " endif
+        let undo_ftplugin = 'setlocal foldmethod< foldexpr< | unlet! b:foldtext_rx b:foldtext_level_expr | autocmd! Foldtext InsertLeave <buffer>'
+        if exists('b:undo_ftplugin')
+            let b:undo_ftplugin .= ' | '. undo_ftplugin
+        else
+            let b:undo_ftplugin = undo_ftplugin
+        endif
     endif
 endf
 
@@ -77,13 +77,7 @@ endf
 let s:leaf = {}
 
 function! s:leaf.GetFoldLevel(lnum) abort dict "{{{3
-    if index(self.lnums, a:lnum) != -1
-        return '>'. self.level
-    " elseif a:lnum < self.lnums[0]
-    "     return -1
-    else
-        return self.level
-    endif
+    return get(self.lnums, ''. a:lnum, self.level)
 endf
 
 
@@ -159,10 +153,14 @@ function! s:Leaf(lnums, headings) abort "{{{3
     let l:lnum = a:lnums[0]
     let l:snum = ''. l:lnum
     let l:leaf = copy(s:leaf)
-    let l:leaf.lnums = sort(copy(a:lnums))
-    let l:leaf.level = a:headings[l:snum].level
-    let l:first = a:headings[l:snum].first
-    if l:first && l:lnum > 1
+    let l:level = a:headings[l:snum].level
+    let l:leaf.level = l:level
+    let l:lnums = {}
+    for l:lnum1 in a:lnums
+        let l:lnums[''. l:lnum1] = '>'. l:level
+    endfor
+    let l:leaf.lnums = l:lnums
+    if l:lnum > 1 && a:headings[l:snum].first
         let l:node = copy(s:node)
         let l:node.mid = l:lnum
         let l:node.left = copy(s:empty)
@@ -181,10 +179,10 @@ function! s:Node(lnums, headings) abort "{{{3
     let l:node.mid = a:lnums[l:mid]
     let l:node.left = s:Tree(a:lnums[0 : l:mid - 1], a:headings)
     let l:node.right = s:Tree(a:lnums[l:mid : -1], a:headings)
-    " if has_key(l:node.left, 'level') && has_key(l:node.right, 'level') && l:node.left.level == l:node.right.level
-    "     return s:Leaf(a:lnums, a:headings)
-    " else
+    if has_key(l:node.left, 'level') && has_key(l:node.right, 'level') && l:node.left.level == l:node.right.level
+        return s:Leaf(a:lnums, a:headings)
+    else
         return l:node
-    " endif
+    endif
 endf
 
