@@ -19,15 +19,15 @@ Install~
 Either use the zip archive:
 
 - Download the zip archive
-- Extract it to ~/.vim/pack/tml/start/vikibase_vim
+- Extract it to `~/.vim/pack/tml/start/foldtext_vim`
 
 or install from github:
 
 - Start a terminal
-- Change the working directory to ~/.vim/pack/tml/start/
+- Change the working directory to `~/.vim/pack/tml/start/`
 - Type: git clone https://github.com/tomtom/vikibase_vim
 
-NOTE: On Windows, ~/.vim might be ~/vimfiles. Please see 'runtimepath' for 
+NOTE: On Windows, `~/.vim` might be `~/vimfiles`. Please see 'runtimepath' for 
 details.
 
 
