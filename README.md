@@ -1,7 +1,4 @@
-*foldtext.txt*  Fold text with headings (markdown, viki, org, latex etc.)
-                    Author: Tom Link, micathom at gmail com
-
-This plugin provides |folding| support for filetypes that don't do so by default:
+This plugin provides `folding` support for filetypes that don't do so by default:
 
 - markdown, pandoc
 - viki
@@ -14,7 +11,8 @@ and many lines of text in between.
 
 
 -----------------------------------------------------------------------
-Install~
+
+# Install
 
 Either use the zip archive:
 
@@ -31,4 +29,9 @@ NOTE: On Windows, ~/.vim might be ~/vimfiles. Please see 'runtimepath' for
 details.
 
 
-%s
+
+
+
+License: GPLv3 or later
+
+
