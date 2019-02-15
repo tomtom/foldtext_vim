@@ -1,8 +1,12 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     https://github.com/tomtom
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-04-04
-" @Revision:    131
+" @Last Change: 2019-01-29
+" @Revision:    153
+
+if exists(':Tlibtrace') != 2
+    command! -nargs=+ -bang Tlibtrace :
+endif
 
 
 if !exists('g:foldtext#max_headings')
@@ -10,43 +14,61 @@ if !exists('g:foldtext#max_headings')
 endif
 
 
+if !exists('g:foldtext#debug')
+    let g:foldtext#debug = 0   "{{{2
+endif
+
+
 function! foldtext#MaybeInvalidateData() abort "{{{3
+    " Tlibtrace 'foldtext', exists('b:foldtext_invalidated'), exists('b:foldtext')
     " Always invalidate the data
     if !exists('b:foldtext_invalidated') && exists('b:foldtext')
         let b:foldtext_invalidated = 1
-        au Viki CursorHold,CursorHoldI <buffer> call s:InvalidateData()
     endif
 endf
 
 
 function! s:InvalidateData() abort "{{{3
-    au! Viki CursorHold,CursorHoldI <buffer> call s:InvalidateData()
+    " Tlibtrace 'foldtext', exists('b:foldtext_invalidated'), exists('b:foldtext')
     unlet! b:foldtext_invalidated
     unlet! b:foldtext
 endf
 
 
+function! foldtext#Reset() abort "{{{3
+    Tlibtrace 'foldtext', exists('b:foldtext_invalidated'), exists('b:foldtext')
+    call s:InvalidateData()
+    norm! zx
+endf
+
+
 function! foldtext#Setup(opt) abort "{{{3
     let bufnr = bufnr('%')
+    Tlibtrace 'foldtext', bufnr
     if has_key(a:opt, 'rx') && getbufvar(bufnr, 'foldtext_rx', '') != a:opt.rx
         let b:foldtext_rx = a:opt.rx
+        Tlibtrace 'foldtext', b:foldtext_rx
     endif
     if has_key(a:opt, 'level_expr') && getbufvar(bufnr, 'foldtext_level_expr', '') != a:opt.level_expr
         let b:foldtext_level_expr = a:opt.level_expr
+        Tlibtrace 'foldtext', b:foldtext_level_expr
     endif
     if &l:foldexpr !=# 'foldtext#Foldexpr(v:lnum)'
         augroup Foldtext
             autocmd InsertLeave <buffer> call foldtext#MaybeInvalidateData()
             " autocmd TextChanged <buffer> call foldtext#MaybeInvalidateData()
+            autocmd CursorHold,CursorHoldI <buffer> if exists('b:foldtext_invalidated') | call s:InvalidateData() | endif
         augroup END
         setlocal foldmethod=expr
         setlocal foldexpr=foldtext#Foldexpr(v:lnum)
+        Tlibtrace 'foldtext', &l:foldmethod, &l:foldexpr
         let undo_ftplugin = 'setlocal foldmethod< foldexpr< | unlet! b:foldtext_rx b:foldtext_level_expr | autocmd! Foldtext InsertLeave <buffer>'
         if exists('b:undo_ftplugin')
             let b:undo_ftplugin .= ' | '. undo_ftplugin
         else
             let b:undo_ftplugin = undo_ftplugin
         endif
+        Tlibtrace 'foldtext', b:undo_ftplugin
     endif
 endf
 
@@ -110,6 +132,7 @@ function! s:MakeHeadingsData() abort "{{{3
     let l:lnums = []
     let l:headings = {}
     let l:pos = getpos('.')
+    Tlibtrace 'foldtext', l:pos
     try
         let l:lnum = 0
         let l:first = 1
